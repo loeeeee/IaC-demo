@@ -1,0 +1,102 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+# Our future selves will thank us for noting what cable goes where and labeling the relevant network interfaces if it isn't already done out-of-the-box.
+define WANLINK = enp1s0
+define LANLINK = wg0
+
+# I will be presenting the following services to the Internet. You perhaps won't, in which case the following line should be commented out with a # sign similar to this line.
+# define PORTFORWARDS = { http, https }
+
+# We never expect to see the following address ranges on the Internet
+define BOGONS4 = { 0.0.0.0/8, 10.0.0.0/8, 10.64.0.0/10, 127.0.0.0/8, 127.0.53.53, 169.254.0.0/16, 172.16.0.0/12, 192.0.0.0/24, 192.0.2.0/24, 192.168.0.0/16, 198.18.0.0/15, 198.51.100.0/24, 203.0.113.0/24, 224.0.0.0/4, 240.0.0.0/4, 255.255.255.255/32 }
+define TUN_ADDR =  { 192.168.205.0/24 }
+
+# The actual firewall starts here
+table inet filter {
+        # Additional rules for traffic from the Internet
+        chain inbound_world {
+                # Allow SMTP, HTTP and HTTPS
+                tcp dport { 25, 80, 443 } accept
+
+                # udp dport 51820 accept
+
+                ip saddr { $BOGONS4 } drop
+        }
+        # Additional rules for traffic from our private network
+        chain inbound_private {
+                #ip protocol . th dport vmap { tcp . 22 : accept, udp . 53 : accept, tcp . 53 : accept, udp . 67 : accept, udp . 5201 : accept, tcp . 5201 : accept }
+                accept
+        }
+        # Our funnel for inbound traffic from any network
+        chain inbound {
+                # Default Deny
+                type filter hook input priority 0; policy drop;
+                # ip protocol icmp counter accept comment "accept all ICMP types"
+                # Allow established and related connections: Allows Internet servers to respond to requests from our Internal network
+                ct state vmap { established : accept, related : accept, invalid : drop} counter
+
+                # ICMP is - mostly - our friend. Limit incoming pings somewhat but allow necessary information.
+                # ip protocol icmp icmp type { destination-unreachable, echo-reply, echo-request, source-quench, time-exceeded } limit rate 5/second accept
+                #ip6 nexthdr ipv6-icmp icmpv6 type echo-request limit rate 5/second accept
+                #ip6 nexthdr ipv6-icmp icmpv6 type echo-request counter packets 0 bytes 0 drop
+                #ip protocol icmp icmp type echo-request limit rate 5/second accept
+                #ip protocol icmp icmp type echo-request counter packets 0 bytes 0 drop
+                ip6 nexthdr ipv6-icmp icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem, echo-reply, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } accept
+                ip protocol icmp accept comment "accept all ICMP types"
+
+                # Drop traffic arriving on non-loopback interfaces that claims to be from or to the loopback subnet
+                iifname != "lo" ip saddr 127.0.0.0/8 drop
+                iifname != "lo" ip daddr 127.0.0.0/8 drop
+
+                # Separate rules for traffic from Internet and from the internal network
+                iifname vmap { lo: accept, $WANLINK : jump inbound_world, $LANLINK : jump inbound_private }
+        }
+        # Rules for sending traffic from one network interface to another
+        chain forward {
+                # Default deny, again
+                type filter hook forward priority 0; policy drop;
+                # Accept established and related traffic
+                ct state vmap { established : accept, related : accept, invalid : drop }
+
+                # Let traffic from this router and from the Internal network get out onto the Internet
+                iif { lo, $LANLINK } accept
+                # Only allow specific inbound traffic from the Internet (only relevant if we present services to the Internet).
+                # tcp dport { $PORTFORWARDS } counter
+                ip protocol icmp accept
+        }
+        chain output {
+                type filter hook output priority 0; policy accept;
+                #ip daddr 192.168.1.1 counter packets 1 bytes 84 # handle 5
+        }
+}
+
+# Network address translation: What allows us to glue together a private network with the Internet even though we only have one routable address, as per IPv4 limitations
+table ip nat {
+        chain  prerouting {
+                type nat hook prerouting priority -100;
+                # Send specific inbound traffic to our internal web server (only relevant if we present services to the Internet).
+                # iifname $WANLINK tcp dport { $PORTFORWARDS } dnat to 10.199.200.10
+        }
+        chain postrouting {
+                type nat hook postrouting priority 100;
+                # Pretend that outbound traffic originates in this router so that Internet servers know where to send responses
+                oif $WANLINK masquerade
+                # ip saddr $LANLINK_NET  oifname $WANLINK masquerade
+        }
+}
+
+table inet retag {
+        chain tagout {
+                ## mangle priority, retag anything coming from LAN, you
+                ## might want to do the same for anything coming from WAN
+                ## (assumed to be eth1)
+                type filter hook postrouting priority -1; policy accept;
+                iif { lo, $LANLINK, $LANLINK } accept
+                # ip protocol icmp ip dscp set 0 comment "set ICMP importance"
+                ip dscp set ef ## convert all to cs3 first, this is my base DSCP tag rather than cs0
+                ip6 dscp set ef
+                ip protocol icmp ip dscp set 0 comment "set ICMP importance"
+        }
+}

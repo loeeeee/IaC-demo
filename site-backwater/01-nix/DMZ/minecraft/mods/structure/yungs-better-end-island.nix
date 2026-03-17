@@ -1,0 +1,7 @@
+{ pkgs, ... }:
+
+pkgs.fetchurl {
+  name = "YungsBetterEndIsland-1.21.1-Fabric-3.1.2.jar";
+  url = "https://cdn.modrinth.com/data/2BwBOmBQ/versions/zpUYcjIg/YungsBetterEndIsland-1.21.1-Fabric-3.1.2.jar";
+  sha256 = "9a398731319f53458abedf6295d63dc140c82d81cfa89e088526b0821375af59";
+}

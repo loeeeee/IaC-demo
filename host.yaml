@@ -1,0 +1,318 @@
+targets:
+  # Backwater
+  ## DMZ
+  - site: backwater
+    config: binary-cache
+    host: 172.22.100.105
+    network_area: DMZ
+    deploy: true
+    update: false # DO NOT UPDATE BINARY CACHE AUTOMATICALLY
+    priority: -1
+  - site: backwater
+    config: qbittorrent
+    host: 172.22.100.106
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: dufs
+    host: 172.22.100.107
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: ws-tunnel
+    host: 172.22.100.108
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: speedtest
+    host: 172.22.100.109
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: haproxy
+    host: 172.22.100.110
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: mailserver
+    host: 172.22.100.111
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: wireguard
+    host: 172.22.100.112
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: wifi-gateway
+    host: 172.22.100.113
+    network_area: DMZ
+    deploy: false
+    update: false
+    priority: 1
+  - site: backwater
+    config: searxng
+    host: 172.22.100.114
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1  
+  - site: backwater
+    config: claw
+    host: 172.22.100.115
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: open-amplify-ai
+    host: 172.22.100.116
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: matrix
+    host: 172.22.100.117
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: minecraft
+    host: 172.22.100.118
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  ## LAN-server
+  - site: backwater
+    config: victorialogs
+    host: 172.22.0.107
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: dhcp-master
+    host: 172.22.0.108
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 0 # Update before backup node
+  - site: backwater
+    config: unbound-master
+    host: 172.22.0.109
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 0 # Update before backup node
+  - site: backwater
+    config: bind
+    host: 172.22.0.110
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 0
+  - site: backwater
+    config: unbound-backup
+    host: 172.22.0.111
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1 # Update after master node
+  - site: backwater
+    config: prometheus
+    host: 172.22.0.112
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: grafana
+    host: 172.22.0.113
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: dhcp-backup
+    host: 172.22.0.114
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1 # Update after master node
+  - site: backwater
+    config: lldap
+    host: 172.22.0.115
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: authelia
+    host: 172.22.0.116
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: gatus
+    host: 172.22.0.117
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: code-server
+    host: 172.22.0.130
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: immich
+    host: 172.22.0.131
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: jellyfin
+    host: 172.22.0.132
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: postgresql
+    host: 172.22.0.133
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: gpu-server
+    host: 172.22.0.134
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: spark-master
+    host: 172.22.0.136
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: spark-worker1
+    host: 172.22.0.137
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: spark-worker2
+    host: 172.22.0.138
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: backwater
+    config: redis
+    host: 172.22.0.140
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  ## LAN-client
+  - site: backwater
+    config: cobblestone
+    host: 172.22.1.50
+    network_area: LAN-client
+    deploy: false
+    update: false
+    priority: 1
+  # Wilmington
+  ## LAN-server
+  - site: wilmington
+    config: tuff
+    host: 172.23.0.2
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  # Home
+  ## LAN-server
+  - site: home
+    config: unbound-master
+    host: 172.21.0.126
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 0
+  - site: home
+    config: unbound-backup
+    host: 172.21.0.127
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1
+  - site: home
+    config: bind
+    host: 172.21.0.128
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 0
+  - site: home
+    config: dhcp-master
+    host: 172.21.0.129
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 0 # Update before backup node
+  - site: home
+    config: dhcp-backup
+    host: 172.21.0.130
+    network_area: LAN-server
+    deploy: true
+    update: true
+    priority: 1 # Update after master node
+  ## DMZ
+  - site: home
+    config: binary-cache
+    host: 172.21.1.101
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: -1
+  - site: home
+    config: ws-tunnel
+    host: 172.21.1.102
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1
+  - site: home
+    config: haproxy
+    host: 172.21.1.103
+    network_area: DMZ
+    deploy: true
+    update: true
+    priority: 1

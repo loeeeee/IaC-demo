@@ -1,0 +1,58 @@
+#!/run/current-system/sw/bin/nft -f
+# nft flush ruleset
+
+define LAN_SERVER = { 172.21.0.0/24 }
+define LAN_CLIENT = { 172.21.3.0/24 }
+define DMZ = { 172.21.1.0/24 }
+define HOME = { 172.21.0.0/16 }
+define BACKWATER = { 172.22.0.0/16 }
+define BACKBONE_BACKWATER = { 100.97.98.108 }
+
+add table inet firewall {
+
+    chain inbound_ipv4 {
+        # Rate limit ping, accept all other ICMP
+        icmp type echo-request limit rate 10/second accept
+        meta l4proto icmp accept
+    }
+
+    chain inbound_ipv6 {
+        # Rate limit ping, accept all other ICMPv6
+        icmpv6 type echo-request limit rate 10/second accept
+        meta l4proto icmpv6 accept
+    }
+
+    chain inbound {
+
+        # By default, drop all traffic unless it meets a filter
+        # criteria specified by the rules that follow below.
+        type filter hook input priority 0; policy drop;
+
+        # Allow traffic from established and related packets, drop invalid
+        ct state vmap { established : accept, related : accept, invalid : drop } 
+
+        # Allow loopback traffic.
+        iifname lo accept
+
+        # Jump to chain according to layer 3 protocol using a verdict map
+        meta protocol vmap { ip : jump inbound_ipv4, ip6 : jump inbound_ipv6 }
+
+        # Allow SSH from LAN_Server and related networks
+        ip saddr { $HOME, $BACKWATER, $BACKBONE_BACKWATER } tcp dport 22 accept
+
+        # Allow DNS queries (UDP/TCP port 53) from all networks
+        udp dport 53 accept
+        tcp dport 53 accept
+
+        # Log all denied inbound traffic
+        log prefix "[nftables] Inbound Denied: " counter drop
+    }
+
+    chain forward {
+        # Drop everything (assumes this device is not a router)
+        type filter hook forward priority 0; policy drop;
+    }
+
+    # no need to define output chain, default policy is accept if undefined.
+}
+

@@ -1,0 +1,71 @@
+#!/usr/sbin/nft -f
+
+# Flush existing rules
+flush ruleset
+
+# Define interface variables for clarity
+define DMZ = ens18
+define VANDY = ens19
+define WIFI = wls16
+define LAN_SERVER = 172.22.0.0/24
+
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        # Allow established and related connections
+        ct state {established, related} accept
+
+        # Allow loopback
+        iifname "lo" accept
+
+        # Allow ICMPv4 (ping)
+        ip protocol icmp accept
+
+        # Allow SSH from LAN_Server
+        iifname $DMZ ip saddr $LAN_SERVER tcp dport 22 accept
+
+        # Allow SSH from vandy network (for management)
+        # iifname $VANDY ip saddr 192.168.100.8/30 tcp dport 22 accept
+
+        # Log dropped packets (optional, useful for debugging)
+        # log prefix "INPUT DROP: " drop
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+
+        # Allow established and related connections
+        ct state {established, related} accept
+
+        # Allow forwarding from vandy network to WiFi (VuDevice)
+        iifname $VANDY oifname $WIFI accept
+
+        # Allow forwarding from WiFi (VuDevice) to vandy network
+        iifname $WIFI oifname $VANDY accept
+
+        # Log dropped packets (optional, useful for debugging)
+        # log prefix "FORWARD DROP: " drop
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}
+
+table inet nat {
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+    }
+
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+
+        # Masquerade traffic from vandy network going to WiFi (VuDevice)
+        iifname $VANDY oifname $WIFI masquerade
+
+        # Masquerade traffic from WiFi going to vandy network (return path)
+        iifname $WIFI oifname $VANDY masquerade
+    }
+}
+

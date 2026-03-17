@@ -1,0 +1,44 @@
+#!/usr/bin/env nft -f
+
+# Flush existing rules
+flush ruleset
+
+# Define network addresses
+define LAN_SERVER = 172.22.0.0/24
+define HAPROXY   = 172.22.100.110
+define GATUS   = 172.22.0.117
+
+# Filter table
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        # Allow loopback traffic
+        iif "lo" accept
+
+        # Allow established and related connections
+        ct state established,related accept
+
+        # Allow SSH from LAN_Server only
+        tcp dport 22 ip saddr $LAN_SERVER accept
+
+        # Allow SearXNG web UI from HAProxy and LAN_Server
+        tcp dport 8080 ip saddr $HAPROXY accept
+        tcp dport 8080 ip saddr $GATUS accept
+
+        # Allow ICMP for network diagnostics
+        icmp type { echo-request, echo-reply, destination-unreachable, time-exceeded } accept
+        ip6 nexthdr icmpv6 icmpv6 type { echo-request, echo-reply, destination-unreachable, time-exceeded, packet-too-big } accept
+
+        # Drop everything else
+        drop
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}

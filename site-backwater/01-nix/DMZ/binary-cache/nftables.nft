@@ -1,0 +1,50 @@
+#!/usr/bin/env nft -f
+
+# Flush existing rules
+flush ruleset
+
+# Define network interfaces and addresses
+define LAN_SERVER = 172.22.0.0/24
+define LAN_CLIENT = 172.22.1.0/24
+define LAN_REMOTE = 172.22.2.0/24
+define DMZ = 172.22.100.0/24
+
+# Define table for filter rules
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+
+        # Allow loopback traffic
+        iif "lo" accept
+
+        # Allow established and related connections
+        ct state established,related accept
+
+        # Allow SSH from LAN_Server only
+        tcp dport 22 ip saddr $LAN_SERVER accept
+        tcp dport 22 ip saddr $LAN_CLIENT accept
+        tcp dport 22 ip saddr $LAN_REMOTE accept
+        tcp dport 22 ip saddr $DMZ accept
+
+        # Allow binary cache (Harmonia) from HAProxy
+        tcp dport 8080 ip saddr 172.22.100.110 accept
+
+        # Allow Gatus health checks from Gatus LXC (pollux)
+        tcp dport 8080 ip saddr 172.22.0.117 accept
+
+        # Allow ICMP for network diagnostics
+        icmp type { echo-request, echo-reply, destination-unreachable, time-exceeded } accept
+        ip6 nexthdr icmpv6 icmpv6 type { echo-request, echo-reply, destination-unreachable, time-exceeded, packet-too-big } accept
+
+        # Drop everything else
+        drop
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}

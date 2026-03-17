@@ -1,0 +1,38 @@
+flush ruleset
+
+table inet firewall {
+
+    chain inbound_ipv4 {
+        icmp type echo-request limit rate 5/second accept
+    }
+
+    chain inbound_ipv6 {
+        icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+        icmpv6 type echo-request limit rate 5/second accept
+    }
+
+    chain inbound {
+        type filter hook input priority 0; policy drop;
+        ct state vmap { established : accept, related : accept, invalid : drop }
+        iifname lo accept
+        meta protocol vmap { ip : jump inbound_ipv4, ip6 : jump inbound_ipv6 }
+
+        # SSH from LAN_Server
+        ip saddr 172.22.0.0/24 tcp dport 22 accept
+
+        # HDFS DataNode Web UI (9864), data (9866), IPC (9867) from LAN and master
+        ip saddr 172.22.0.0/24 tcp dport 9864 accept
+        ip saddr 172.22.0.0/24 tcp dport 9866 accept
+        ip saddr 172.22.0.0/24 tcp dport 9867 accept
+        # Spark worker RPC and Web UI
+        ip saddr 172.22.0.0/24 tcp dport 7079 accept
+        ip saddr 172.22.0.0/24 tcp dport 8081 accept
+        # Spark runtime ports (driver/executor/block manager) from master and peers
+        ip saddr 172.22.0.136 tcp dport 1024-65535 accept
+        ip saddr 172.22.0.137 tcp dport 1024-65535 accept
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+}

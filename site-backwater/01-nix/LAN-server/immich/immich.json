@@ -1,0 +1,239 @@
+{
+  "backup": {
+    "database": {
+      "cronExpression": "0 02 * * *",
+      "enabled": true,
+      "keepLastAmount": 14
+    }
+  },
+  "ffmpeg": {
+    "accel": "vaapi",
+    "accelDecode": true,
+    "acceptedAudioCodecs": [
+      "aac",
+      "mp3",
+      "libopus"
+    ],
+    "acceptedContainers": [
+      "mov",
+      "ogg",
+      "webm"
+    ],
+    "acceptedVideoCodecs": [
+      "h264",
+      "hevc",
+      "av1"
+    ],
+    "bframes": -1,
+    "cqMode": "auto",
+    "crf": 30,
+    "gopSize": 0,
+    "maxBitrate": "0",
+    "preferredHwDevice": "auto",
+    "preset": "slow",
+    "refs": 0,
+    "targetAudioCodec": "libopus",
+    "targetResolution": "1080",
+    "targetVideoCodec": "hevc",
+    "temporalAQ": false,
+    "threads": 0,
+    "tonemap": "hable",
+    "transcode": "required",
+    "twoPass": true
+  },
+  "image": {
+    "colorspace": "p3",
+    "extractEmbedded": false,
+    "fullsize": {
+      "enabled": false,
+      "format": "webp",
+      "quality": 80
+    },
+    "preview": {
+      "format": "webp",
+      "quality": 80,
+      "size": 2160
+    },
+    "thumbnail": {
+      "format": "webp",
+      "quality": 80,
+      "size": 250
+    }
+  },
+  "job": {
+    "backgroundTask": {
+      "concurrency": 5
+    },
+    "faceDetection": {
+      "concurrency": 2
+    },
+    "library": {
+      "concurrency": 5
+    },
+    "metadataExtraction": {
+      "concurrency": 5
+    },
+    "migration": {
+      "concurrency": 5
+    },
+    "notifications": {
+      "concurrency": 5
+    },
+    "ocr": {
+      "concurrency": 2
+    },
+    "search": {
+      "concurrency": 5
+    },
+    "sidecar": {
+      "concurrency": 5
+    },
+    "smartSearch": {
+      "concurrency": 2
+    },
+    "thumbnailGeneration": {
+      "concurrency": 16
+    },
+    "videoConversion": {
+      "concurrency": 1
+    },
+    "workflow": {
+      "concurrency": 5
+    }
+  },
+  "library": {
+    "scan": {
+      "cronExpression": "0 0 * * *",
+      "enabled": true
+    },
+    "watch": {
+      "enabled": false
+    }
+  },
+  "logging": {
+    "enabled": true,
+    "level": "debug"
+  },
+  "machineLearning": {
+    "availabilityChecks": {
+      "enabled": true,
+      "interval": 30000,
+      "timeout": 2000
+    },
+    "clip": {
+      "enabled": true,
+      "modelName": "ViT-B-32__openai"
+    },
+    "duplicateDetection": {
+      "enabled": true,
+      "maxDistance": 0.01
+    },
+    "enabled": true,
+    "facialRecognition": {
+      "enabled": true,
+      "maxDistance": 0.45,
+      "minFaces": 20,
+      "minScore": 0.6,
+      "modelName": "buffalo_l"
+    },
+    "ocr": {
+      "enabled": true,
+      "maxResolution": 736,
+      "minDetectionScore": 0.5,
+      "minRecognitionScore": 0.8,
+      "modelName": "PP-OCRv5_mobile"
+    },
+    "urls": [
+      "http://172.22.0.134:3003"
+    ]
+  },
+  "map": {
+    "darkStyle": "https://tiles.immich.cloud/v1/style/dark.json",
+    "enabled": true,
+    "lightStyle": "https://tiles.immich.cloud/v1/style/light.json"
+  },
+  "metadata": {
+    "faces": {
+      "import": false
+    }
+  },
+  "newVersionCheck": {
+    "enabled": true
+  },
+  "nightlyTasks": {
+    "clusterNewFaces": true,
+    "databaseCleanup": true,
+    "generateMemories": true,
+    "missingThumbnails": true,
+    "startTime": "00:00",
+    "syncQuotaUsage": true
+  },
+  "notifications": {
+    "smtp": {
+      "enabled": false,
+      "from": "",
+      "replyTo": "",
+      "transport": {
+        "host": "",
+        "ignoreCert": false,
+        "password": "",
+        "port": 587,
+        "secure": false,
+        "username": ""
+      }
+    }
+  },
+  "oauth": {
+    "autoLaunch": true,
+    "autoRegister": true,
+    "buttonText": "Login with Authelia",
+    "clientId": "immich",
+    "clientSecret": "T05dZkXrsFeV90w1SWFDQLaZZLKodJ1ctv54ACf.~ucnqLBnlw~iR0AwUmhpozegHgcMtm1u",
+    "defaultStorageQuota": null,
+    "enabled": true,
+    "issuerUrl": "https://auth.backwater.REDACTED-DOMAIN.TLD/.well-known/openid-configuration",
+    "mobileOverrideEnabled": false,
+    "mobileRedirectUri": "",
+    "profileSigningAlgorithm": "none",
+    "roleClaim": "immich_role",
+    "scope": "openid profile email",
+    "signingAlgorithm": "RS256",
+    "storageLabelClaim": "preferred_username",
+    "storageQuotaClaim": "immich_quota",
+    "timeout": 30000,
+    "tokenEndpointAuthMethod": "client_secret_post"
+  },
+  "passwordLogin": {
+    "enabled": true
+  },
+  "reverseGeocoding": {
+    "enabled": true
+  },
+  "server": {
+    "externalDomain": "https://photos.backwater.REDACTED-DOMAIN.TLD",
+    "loginPageMessage": "",
+    "publicUsers": true
+  },
+  "storageTemplate": {
+    "enabled": false,
+    "hashVerificationEnabled": true,
+    "template": "{{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}"
+  },
+  "templates": {
+    "email": {
+      "albumInviteTemplate": "",
+      "albumUpdateTemplate": "",
+      "welcomeTemplate": ""
+    }
+  },
+  "theme": {
+    "customCss": ""
+  },
+  "trash": {
+    "days": 31,
+    "enabled": true
+  },
+  "user": {
+    "deleteDelay": 7
+  }
+}

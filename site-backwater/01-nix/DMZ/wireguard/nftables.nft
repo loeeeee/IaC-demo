@@ -1,0 +1,79 @@
+flush ruleset
+
+table inet firewall {
+
+    # --- 2. INPUT FILTERS ---
+    chain inbound_ipv4 {
+        icmp type echo-request limit rate 5/second accept
+    }
+
+    chain inbound_ipv6 {
+        icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+        icmpv6 type echo-request limit rate 5/second accept
+    }
+
+    chain inbound {
+        type filter hook input priority filter; policy drop;
+
+        # Standard State Check
+        ct state vmap { established : accept, related : accept, invalid : drop }
+        iifname lo accept
+        meta protocol vmap { ip : jump inbound_ipv4, ip6 : jump inbound_ipv6 }
+
+        # Allow traffic from containers (bridge and macvlan interfaces)
+        iifname "br-wg" accept
+        iifname { "mv-ens19.2", "mv-ens19.6", "mv-ens19.14", "mv-ens19.18", "mv-ens19.22", "mv-ens19.26", "mv-ens19.30", "mv-ens19.34", "mv-ens19.38" } accept
+
+        # Allow SSH from LAN_Server
+        ip saddr 172.22.0.0/24 tcp dport 22 accept
+
+        # Allow WireGuard UDP traffic (The Tunnel Encrypted Traffic)
+        udp dport 51002 accept
+        udp dport 51006 accept
+        udp dport 51014 accept
+
+        # Allow Prometheus (Optional/Commented as in your source)
+        # ip saddr 172.22.0.112 tcp dport 9167 accept
+    }
+
+    # --- 2. FORWARDING (Router Logic) ---
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+
+        # Stateful connection tracking
+        ct state vmap { established : accept, related : accept, invalid : drop }
+
+        # Allow traffic to/from containers (bridge for DMZ/internet)
+        iifname "br-wg" counter accept
+        oifname "br-wg" counter accept
+
+        # Allow traffic to/from containers (macvlan interfaces for transit networks)
+        iifname { "mv-ens19.2", "mv-ens19.6", "mv-ens19.14", "mv-ens19.18", "mv-ens19.22", "mv-ens19.26", "mv-ens19.30", "mv-ens19.34", "mv-ens19.38" } counter accept
+        oifname { "mv-ens19.2", "mv-ens19.6", "mv-ens19.14", "mv-ens19.18", "mv-ens19.22", "mv-ens19.26", "mv-ens19.30", "mv-ens19.34", "mv-ens19.38" } counter accept
+
+        # Allow container bridge traffic to DMZ (for WireGuard endpoints and internet access)
+        iifname "br-wg" oifname "ens18" counter accept
+        iifname "ens18" oifname "br-wg" counter accept
+        
+        # Allow cross-interface traffic (bridge <-> macvlan)
+        iifname "br-wg" oifname { "mv-ens19.2", "mv-ens19.6", "mv-ens19.14", "mv-ens19.18", "mv-ens19.22", "mv-ens19.26", "mv-ens19.30", "mv-ens19.34", "mv-ens19.38" } counter accept
+        iifname { "mv-ens19.2", "mv-ens19.6", "mv-ens19.14", "mv-ens19.18", "mv-ens19.22", "mv-ens19.26", "mv-ens19.30", "mv-ens19.34", "mv-ens19.38" } oifname "br-wg" counter accept
+    }
+
+    # --- 3. DNAT (Port Forwarding to Containers) ---
+    chain prerouting {
+        type nat hook prerouting priority dstnat; policy accept;
+
+        # Forward WireGuard remote access traffic from ens18:51014 to container
+        iifname "ens18" udp dport 51014 dnat ip to 192.168.101.13:51014
+        iifname "ens18" udp dport 51006 dnat ip to 192.168.101.6:51006
+    }
+
+    # --- 4. NAT / MASQUERADE (For Container DMZ Access) ---
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        
+        # Masquerade all container bridge traffic going to DMZ for WireGuard endpoint access and internet
+        ip saddr 192.168.101.0/24 oifname "ens18" counter masquerade comment "Masquerade containers to DMZ"
+    }
+}

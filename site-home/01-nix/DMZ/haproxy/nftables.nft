@@ -1,0 +1,39 @@
+#!/run/current-system/sw/bin/nft -f
+
+define LAN_SERVER = { 172.21.0.0/24 }
+define LAN_CLIENT = { 172.21.3.0/24 }
+define DMZ = { 172.21.1.0/24 }
+define BACKWATER = { 172.22.0.0/16 }
+
+add table inet firewall {
+  chain inbound_ipv4 {
+    icmp type echo-request limit rate 10/second accept
+    meta l4proto icmp accept
+  }
+
+  chain inbound_ipv6 {
+    icmpv6 type echo-request limit rate 10/second accept
+    meta l4proto icmpv6 accept
+  }
+
+  chain inbound {
+    type filter hook input priority 0; policy drop;
+
+    ct state vmap { established : accept, related : accept, invalid : drop }
+    iifname lo accept
+    meta protocol vmap { ip : jump inbound_ipv4, ip6 : jump inbound_ipv6 }
+
+    # SSH from internal networks
+    ip saddr {$LAN_SERVER, $LAN_CLIENT, $DMZ, $BACKWATER} tcp dport 22 accept
+
+    # Public HTTPS for HAProxy
+    tcp dport 443 accept
+
+    log prefix "[nftables] Inbound Denied: " counter drop
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+  }
+}
+

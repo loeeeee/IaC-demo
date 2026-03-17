@@ -1,0 +1,70 @@
+flush ruleset
+
+table inet firewall {
+
+    chain inbound_ipv4 {
+        # accepting ping (icmp-echo-request) for diagnostic purposes.
+        # However, it also lets probes discover this host is alive.
+        # This sample accepts them within a certain rate limit:
+        #
+        icmp type echo-request limit rate 5/second accept
+    }
+
+    chain inbound_ipv6 {
+        # accept neighbour discovery otherwise connectivity breaks
+        #
+        icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+
+        # accepting ping (icmpv6-echo-request) for diagnostic purposes.
+        # However, it also lets probes discover this host is alive.
+        # This sample accepts them within a certain rate limit:
+        #
+        icmpv6 type echo-request limit rate 5/second accept
+    }
+
+    chain inbound {
+
+        # By default, drop all traffic unless it meets a filter
+        # criteria specified by the rules that follow below.
+        type filter hook input priority 0; policy drop;
+
+        # Allow traffic from established and related packets, drop invalid
+        ct state vmap { established : accept, related : accept, invalid : drop }
+
+        # Allow loopback traffic.
+        iifname lo accept
+
+        # Jump to chain according to layer 3 protocol using a verdict map
+        meta protocol vmap { ip : jump inbound_ipv4, ip6 : jump inbound_ipv6 }
+
+        # Allow SSH on port TCP/22 only from LAN_Server (172.22.0.0/24)
+        ip saddr 172.22.0.0/24 tcp dport 22 accept
+        ip saddr 172.22.1.0/24 tcp dport 22 accept
+        ip saddr 172.22.2.0/24 tcp dport 22 accept
+
+        # Allow code-server on port TCP/8080 from DMZ HAProxy
+        ip saddr 172.22.100.110 tcp dport 8080 accept
+
+        # Allow Gatus health checks from Gatus LXC (pollux)
+        ip saddr 172.22.0.117 tcp dport 8080 accept
+
+        # Allow Prometheus node-exporter on port TCP/9100 from observability LXC (betelgeuse)
+        ip saddr 172.22.0.107 tcp dport 9100 accept
+
+        # Spark standalone: allow cluster nodes to reach driver UI in client mode.
+        # ip saddr 172.22.0.136 tcp dport 4040-65535 accept
+        # ip saddr 172.22.0.137 tcp dport 4040-65535 accept
+        # ip saddr 172.22.0.138 tcp dport 4040-65535 accept
+
+        # Uncomment to enable logging of denied inbound traffic
+        # log prefix "[nftables] Inbound Denied: " counter drop
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+
+    chain outbound {
+        type filter hook output priority 0; policy accept;
+    }
+}
