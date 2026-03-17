@@ -4,35 +4,35 @@
 
  The repo models a buttoned‑up infrastructure with DNS, DHCP, identity, observability, and storage, plus a growing set of applications (media, data, gaming, AI, and more) — all described as code.
 
- ```mermaid
- flowchart TD
-   repo[IaC_Repo] --> backwater[Backwater_Site]
-   repo --> home[Home_Site]
-   repo --> wilm[Wilmington_Site]
+```mermaid
+flowchart TD
+  repo[IaC Repo] --> backwater[Backwater Site]
+  repo --> home[Home Site]
+  repo --> wilm[Wilmington Site]
 
-  subgraph backwater_layers[Backwater_Site_Layers]
-    bw_proxmox[Backwater_Proxmox_OpenTofu]
-    bw_nix[Backwater_NixOS_Configs]
-    bw_apps["Backwater_Apps_k8s_media_games"]
+  subgraph backwaterLayers [Backwater Site Layers]
+    bwProxmox[Backwater Proxmox OpenTofu]
+    bwNix[Backwater NixOS Configs]
+    bwApps[Backwater Apps]
   end
 
-   subgraph home_layers[Home_Site_Layers]
-     home_proxmox[Home_Proxmox_OpenTofu]
-     home_nix[Home_NixOS_Configs]
-   end
+  subgraph homeLayers [Home Site Layers]
+    homeProxmox[Home Proxmox OpenTofu]
+    homeNix[Home NixOS Configs]
+  end
 
-   subgraph wilm_layers[Wilmington_Site_Layers]
-     wilm_nix[Wilmington_NixOS_Configs]
-   end
+  subgraph wilmLayers [Wilmington Site Layers]
+    wilmNix[Wilmington NixOS Configs]
+  end
 
-   backwater --> backwater_layers
-   home --> home_layers
-   wilm --> wilm_layers
+  backwater --> backwaterLayers
+  home --> homeLayers
+  wilm --> wilmLayers
 
-   bw_proxmox --> bw_nix --> bw_apps
-   home_proxmox --> home_nix
-   wilm_nix --> bw_apps
- ```
+  bwProxmox --> bwNix --> bwApps
+  homeProxmox --> homeNix
+  wilmNix --> bwApps
+```
 
  ## Architecture at a Glance
 
