@@ -10,11 +10,11 @@
    repo --> home[Home_Site]
    repo --> wilm[Wilmington_Site]
 
-   subgraph backwater_layers[Backwater_Site_Layers]
-     bw_proxmox[Backwater_Proxmox_OpenTofu]
-     bw_nix[Backwater_NixOS_Configs]
-     bw_apps[Backwater_Apps_(k8s,_media,_games)]
-   end
+  subgraph backwater_layers[Backwater_Site_Layers]
+    bw_proxmox[Backwater_Proxmox_OpenTofu]
+    bw_nix[Backwater_NixOS_Configs]
+    bw_apps["Backwater_Apps_k8s_media_games"]
+  end
 
    subgraph home_layers[Home_Site_Layers]
      home_proxmox[Home_Proxmox_OpenTofu]
